@@ -1,0 +1,55 @@
+# Nombre completo: Jackeline Monge Nunez
+# Grupo: 951
+# Fecha de realización: 23 de Febrero del 2025
+# Descripción:  Función para buscar un producto en Amazon
+
+import os
+import time
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+
+def buscar_producto_amazon(producto, num_paginas=3):
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service)
+    driver.get("https://www.amazon.com/")#con este se abre amazon
+    try:
+        search_box = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.ID, "twotabsearchtextbox"))
+        )
+        search_box.send_keys(producto)
+        search_box.send_keys(Keys.RETURN)
+    except Exception as e:
+        print("Error al encontrar la barra de búsqueda:", e)
+        driver.quit()
+        return
+
+    time.sleep(3) #pagina esta cargando
+
+    carpeta = "capturas_amazon"
+    if not os.path.exists(carpeta):#nueva funcion aprendida
+        os.makedirs(carpeta)
+
+    #ciclo para capturas de pantalla
+    for i in range(1, num_paginas + 1):
+        screenshot_path = os.path.abspath(os.path.join(carpeta, f"pagina_{i}.png"))
+        driver.save_screenshot(screenshot_path)
+        print(f"✅ Captura guardada en: {screenshot_path}")#ya se pueden agregar emojis
+
+        try:
+            siguiente_pagina = WebDriverWait(driver, 5).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "a.s-pagination-next"))
+            )
+            siguiente_pagina.click()
+            time.sleep(3)
+        except:
+            print(" No hay más páginas disponibles.")
+            break
+    driver.quit()
+#producto para buscar
+buscar_producto_amazon("laptop", num_paginas=3)
